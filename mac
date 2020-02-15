@@ -5,29 +5,29 @@
 # into an awesome development machine.
 
 fancy_echo() {
-  local fmt="$1"; shift
+    local fmt="$1"; shift
 
-  # shellcheck disable=SC2059
-  printf "\\n$fmt\\n" "$@"
+    # shellcheck disable=SC2059
+    printf "\\n$fmt\\n" "$@"
 }
 
 append_to_zshrc() {
-  local text="$1" zshrc
-  local skip_new_line="${2:-0}"
+    local text="$1" zshrc
+    local skip_new_line="${2:-0}"
 
-  if [ -w "$HOME/.zshrc.local" ]; then
-    zshrc="$HOME/.zshrc.local"
-  else
-    zshrc="$HOME/.zshrc"
-  fi
-
-  if ! grep -Fqs "$text" "$zshrc"; then
-    if [ "$skip_new_line" -eq 1 ]; then
-      printf "%s\\n" "$text" >> "$zshrc"
+    if [ -w "$HOME/.zshrc.local" ]; then
+        zshrc="$HOME/.zshrc.local"
     else
-      printf "\\n%s\\n" "$text" >> "$zshrc"
+        zshrc="$HOME/.zshrc"
     fi
-  fi
+
+    if ! grep -Fqs "$text" "$zshrc"; then
+        if [ "$skip_new_line" -eq 1 ]; then
+            printf "%s\\n" "$text" >> "$zshrc"
+        else
+            printf "\\n%s\\n" "$text" >> "$zshrc"
+        fi
+    fi
 }
 
 # shellcheck disable=SC2154
@@ -36,11 +36,11 @@ trap 'ret=$?; test $ret -ne 0 && printf "failed\n\n" >&2; exit $ret' EXIT
 set -e
 
 if [ ! -d "$HOME/.bin/" ]; then
-  mkdir "$HOME/.bin"
+    mkdir "$HOME/.bin"
 fi
 
 if [ ! -f "$HOME/.zshrc" ]; then
-  touch "$HOME/.zshrc"
+    touch "$HOME/.zshrc"
 fi
 
 # shellcheck disable=SC2016
@@ -49,50 +49,50 @@ append_to_zshrc 'export PATH="$HOME/.bin:$PATH"'
 HOMEBREW_PREFIX="/usr/local"
 
 if [ -d "$HOMEBREW_PREFIX" ]; then
-  if ! [ -r "$HOMEBREW_PREFIX" ]; then
-    sudo chown -R "$LOGNAME:admin" /usr/local
-  fi
+    if ! [ -r "$HOMEBREW_PREFIX" ]; then
+        sudo chown -R "$LOGNAME:admin" /usr/local
+    fi
 else
-  sudo mkdir "$HOMEBREW_PREFIX"
-  sudo chflags norestricted "$HOMEBREW_PREFIX"
-  sudo chown -R "$LOGNAME:admin" "$HOMEBREW_PREFIX"
+    sudo mkdir "$HOMEBREW_PREFIX"
+    sudo chflags norestricted "$HOMEBREW_PREFIX"
+    sudo chown -R "$LOGNAME:admin" "$HOMEBREW_PREFIX"
 fi
 
 update_shell() {
-  local shell_path;
-  shell_path="$(command -v zsh)"
+    local shell_path;
+    shell_path="$(command -v zsh)"
 
-  fancy_echo "Changing your shell to zsh ..."
-  if ! grep "$shell_path" /etc/shells > /dev/null 2>&1 ; then
-    fancy_echo "Adding '$shell_path' to /etc/shells"
-    sudo sh -c "echo $shell_path >> /etc/shells"
-  fi
-  sudo chsh -s "$shell_path" "$USER"
+    fancy_echo "Changing your shell to zsh ..."
+    if ! grep "$shell_path" /etc/shells > /dev/null 2>&1 ; then
+        fancy_echo "Adding '$shell_path' to /etc/shells"
+        sudo sh -c "echo $shell_path >> /etc/shells"
+    fi
+    sudo chsh -s "$shell_path" "$USER"
 }
 
 case "$SHELL" in
-  */zsh)
-    if [ "$(command -v zsh)" != '/usr/local/bin/zsh' ] ; then
-      update_shell
-    fi
-    ;;
-  *)
-    update_shell
-    ;;
+    */zsh)
+        if [ "$(command -v zsh)" != '/usr/local/bin/zsh' ] ; then
+            update_shell
+        fi
+        ;;
+    *)
+        update_shell
+        ;;
 esac
 
 gem_install_or_update() {
-  if gem list "$1" --installed > /dev/null; then
-    gem update "$@"
-  else
-    gem install "$@"
-  fi
+    if gem list "$1" --installed > /dev/null; then
+        gem update "$@"
+    else
+        gem install "$@"
+    fi
 }
 
 if ! command -v brew >/dev/null; then
-  fancy_echo "Installing Homebrew ..."
+    fancy_echo "Installing Homebrew ..."
     curl -fsS \
-      'https://raw.githubusercontent.com/Homebrew/install/master/install' | ruby
+         'https://raw.githubusercontent.com/Homebrew/install/master/install' | ruby
 
     append_to_zshrc '# recommended by brew doctor'
 
@@ -103,8 +103,8 @@ if ! command -v brew >/dev/null; then
 fi
 
 if brew list | grep -Fq brew-cask; then
-  fancy_echo "Uninstalling old Homebrew-Cask ..."
-  brew uninstall --force brew-cask
+    fancy_echo "Uninstalling old Homebrew-Cask ..."
+    brew uninstall --force brew-cask
 fi
 
 fancy_echo "Updating Homebrew formulae ..."
@@ -115,6 +115,7 @@ tap "homebrew/services"
 tap "universal-ctags/universal-ctags"
 tap "railwaycat/emacsmacport"
 tap "AdoptOpenJDK/openjdk"
+tap "homebrew/cask-fonts"
 
 # Unix
 brew "universal-ctags", args: ["HEAD"]
@@ -127,7 +128,7 @@ brew "tmux"
 cask "emacs-mac"
 brew "watchman"
 brew "zsh"
-brew "aspell", args: ["with-lang-en"]
+brew "aspell"
 brew "fontconfig"
 brew "graphviz"
 brew "jq"
@@ -135,7 +136,9 @@ brew "rlwrap"
 brew "telnet"
 
 # Mac
-cask iterm2
+cask "iterm2"
+cask "google-chrome"
+cask "font-fira-code"
 
 # GitHub
 brew "hub"
@@ -143,33 +146,40 @@ brew "hub"
 # Programming language prerequisites and package managers
 brew "libyaml" # should come after openssl
 brew "coreutils"
-brew "clojure"
 brew "node"
 cask "gpg-suite"
 brew "jenv"
 cask "adoptopenjdk13"
 cask "graalvm/tap/graalvm-ce-java11"
+brew "clojure"
 
 EOF
 
+if [ ! -f "$HOME/.ssh/id_rsa" ]; then
+    fancy_echo ".ssh doesn't exist. Generating keypair."
+    ssh-keygen -t rsa -N '' -f $HOME/.ssh/id_rsa
+else
+    fancy_echo ".ssh already exists"
+fi
 
-fancy_echo "Installing latest Ruby ..."
-install_asdf_language "ruby"
-gem update --system
-number_of_cores=$(sysctl -n hw.ncpu)
-bundle config --global jobs $((number_of_cores - 1))
-
-if [ -f "$HOME/.oh-my-zsh" ]; then
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
     fancy_echo "Installing Oh My Zsh"
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+else 
+    fancy_echo ".oh-my-zsh already exists"
 fi
 
 if [ -f "$HOME/.laptop.local" ]; then
-  fancy_echo "Running your customizations from ~/.laptop.local ..."
-  # shellcheck disable=SC1090
-  . "$HOME/.laptop.local"
+    fancy_echo "Running your customizations from ~/.laptop.local ..."
+    # shellcheck disable=SC1090
+    . "$HOME/.laptop.local"
 fi
 
-if [ -f "$HOME/.emacs.d" ]; then
-  git clone git@github.com:flipmokid/emacs-settings.git "$HOME/.emacs.d"
-fi
+# TODO: Pull README.org from github
+# if [ ! -d "$HOME/.emacs.d" ]; then
+#   fancy_echo "Setting up emacs"
+#   git clone git@github.com:flipmokid/emacs-settings.git "$HOME/.emacs.d"
+# else
+#   fancy_echo ".emacs.d already exists"
+# fi
+
